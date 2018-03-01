@@ -1,86 +1,79 @@
+from __future__ import print_function
 import json
 from collections import defaultdict
 from nltk.corpus import brown
 
-root_dict = defaultdict(dict)  # this contains tag to word mapping with number of occurrences of the word
-tags_dict = defaultdict(dict)  # this contains transition values
-tags_counter = dict()
-emmit_tag_counter = dict()
 
-cur_tag = 'S0'
-prev_tag = 'S0'
+def map_token_to_tag(token, tag, root_dict):
+    if token not in root_dict:
+        root_dict[token][tag] = 1
+    elif tag not in root_dict[token]:
+        root_dict[token][tag] = 1
+    else:
+        root_dict[token][tag] += 1
 
-if 'S0' not in tags_counter:
-    tags_counter['S0'] = 1
-else:
-    tags_counter['S0'] += 1
 
-if 'S0' not in emmit_tag_counter:
-    emmit_tag_counter['S0'] = 1
-else:
-    emmit_tag_counter['S0'] += 1
+def count(prev_tag, cur_tag, tags_dict):
+    if prev_tag not in tags_dict:
+        tags_dict[prev_tag][cur_tag] = 1
+    elif cur_tag not in tags_dict[prev_tag]:
+        tags_dict[prev_tag][cur_tag] = 1
+    else:
+        tags_dict[prev_tag][cur_tag] += 1
 
-sents = brown.tagged_sents(tagset='universal')
 
-for sent in sents:
-    words = sent
+def transition_cal(tags_dict, tags_counter):
+    for row in tags_dict:
+        for col in tags_dict:
+            if col != '<S>':
+                if col not in tags_dict[row]:
+                    tags_dict[row][col] = 0  # fill empty cells with zero value
+                else:
+                    tags_dict[row][col] = tags_dict[row][col] * 1.0 / tags_counter[row]
 
-    for word in words:
-        token = word[0]  # this gives the word
-        tag = word[1]  # this gives the POS tag
 
-        # Logic for word to tag mapping
-        if token not in root_dict:
-            root_dict[token][tag] = 1
-        elif tag not in root_dict[token]:
-            root_dict[token][tag] = 1
+def emission_cal(root_dict, tags_counter):
+    for row in root_dict:
+        for col in root_dict[row]:
+            root_dict[row][col] = root_dict[row][col] * 1.0 / tags_counter[col]
+
+
+def main():
+    obser_table = defaultdict(
+            dict)  # containing word-tag mapping with number of occurrences of the word (observation likelihood)
+    trans_table = defaultdict(dict)  # containing transition values (transition probabilities)
+    tags_counter = dict()
+    sents = brown.tagged_sents(tagset='universal')
+
+    for sent in sents:
+        if '<S>' not in tags_counter:
+            tags_counter['<S>'] = 1
         else:
-            root_dict[token][tag] += 1
+            tags_counter['<S>'] += 1
 
-        # Update the emission tags counter
-        if tag not in emmit_tag_counter:
-            emmit_tag_counter[tag] = 1
-        else:
-            emmit_tag_counter[tag] += 1
+        cur_tag = '<S>'
+        for word in sent:
+            token = word[0]  # giving the token (word)
+            tag = word[1]  # giving the POS tag
 
-        # Logic for transition probability dict
-        prev_tag = cur_tag
-        cur_tag = tag
+            map_token_to_tag(token, tag, obser_table)
 
-        if prev_tag not in tags_dict:
-            tags_dict[prev_tag][cur_tag] = 1
-        elif cur_tag not in tags_dict[prev_tag]:
-            tags_dict[prev_tag][cur_tag] = 1
-        else:
-            tags_dict[prev_tag][cur_tag] += 1
+            # logic for transition probability dict
+            prev_tag = cur_tag
+            cur_tag = tag
 
-        # Update the tags counter
-        if tag not in tags_counter:
-            tags_counter[tag] = 1
-        else:
-            tags_counter[tag] += 1
+            count(prev_tag, cur_tag, trans_table)
 
-# print(root_dict)
-# print(tags_dict)
-# print(emmit_tag_counter)
+            # update the number of occurrences of the (new) tag
+            tags_counter[tag] = 1 if tag not in tags_counter else tags_counter[tag] + 1
 
-####### Transition Probability Calculation #######
-# fill zero value in empty cells
-for row in tags_dict:
-    for col in tags_dict[row]:
-        if col not in tags_dict[row] and col is not 'S0':
-            tags_dict[row][col] = 0
+    transition_cal(trans_table, tags_counter)
 
-for row in tags_dict:
-    for col in tags_dict[row]:
-        tags_dict[row][col] = tags_dict[row][col] * 1.0 / tags_counter[row]
-######## End of Transition Probability Calculation = tagsDict (Fix FF/end of line cases) #######
+    emission_cal(obser_table, tags_counter)
 
-######## Emission Probability Calculation #######
-for row in root_dict:
-    for innerTag in root_dict[row]:
-        root_dict[row][innerTag] = root_dict[row][innerTag] * 1.0 / emmit_tag_counter[innerTag]
+    with open('model.txt', 'w') as outfile:
+        # json.dump({"TransitionProb": tags_dict, "EmissionProb": root_dict}, outfile, indent=4)
+        json.dump({"TransitionProb": trans_table}, outfile, indent=4)
 
-with open('model.txt', 'w') as outfile:
-    # json.dump({"TransitionProb": tags_dict, "EmissionProb": root_dict}, outfile, indent=4)
-    json.dump({"TransitionProb": tags_dict}, outfile, indent=4)
+
+if __name__ == "__main__": main()
