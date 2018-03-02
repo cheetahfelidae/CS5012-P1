@@ -4,13 +4,13 @@ from collections import defaultdict
 from nltk.corpus import brown
 
 
-def map_token_to_tag(token, tag, root_dict):
-    if token not in root_dict:
-        root_dict[token][tag] = 1
-    elif tag not in root_dict[token]:
-        root_dict[token][tag] = 1
+def map_word_to_tag(word, tag, root_dict):
+    if word not in root_dict:
+        root_dict[word][tag] = 1
+    elif tag not in root_dict[word]:
+        root_dict[word][tag] = 1
     else:
-        root_dict[token][tag] += 1
+        root_dict[word][tag] += 1
 
 
 def count(prev_tag, cur_tag, tags_dict):
@@ -45,18 +45,18 @@ def main():
     tags_counter = dict()
     sents = brown.tagged_sents(tagset='universal')
 
-    for sent in sents:
+    for sent in sents[0:2800]:
         if '<S>' not in tags_counter:
             tags_counter['<S>'] = 1
         else:
             tags_counter['<S>'] += 1
 
         cur_tag = '<S>'
-        for word in sent:
-            token = word[0]  # giving the token (word)
-            tag = word[1]  # giving the POS tag
+        for token in sent:
+            word = token[0]  # giving the word
+            tag = token[1]  # giving the POS tag
 
-            map_token_to_tag(token, tag, obser_table)
+            map_word_to_tag(word, tag, obser_table)
 
             # logic for transition probability dict
             prev_tag = cur_tag
@@ -71,9 +71,8 @@ def main():
 
     emission_cal(obser_table, tags_counter)
 
-    with open('model.txt', 'w') as outfile:
-        # json.dump({"TransitionProb": tags_dict, "EmissionProb": root_dict}, outfile, indent=4)
-        json.dump({"TransitionProb": trans_table}, outfile, indent=4)
+    with open('hmm-model.txt', 'w') as outfile:
+        json.dump({"Transition": trans_table, "Emission": obser_table}, outfile, indent=4)
 
 
 if __name__ == "__main__": main()
