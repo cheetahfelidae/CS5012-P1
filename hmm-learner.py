@@ -23,13 +23,16 @@ def count(prev_tag, cur_tag, tags_dict):
 
 
 def transition_cal(tags_dict, tags_counter):
+    total_tags = len(tags_dict) - 1  # one less because of start of sentence <S>
+
     for row in tags_dict:
         for col in tags_dict:
             if col != '<S>':
                 if col not in tags_dict[row]:
                     tags_dict[row][col] = 0  # fill empty cells with zero value
                 else:
-                    tags_dict[row][col] = tags_dict[row][col] * 1.0 / tags_counter[row]
+                    tags_dict[row][col] = (tags_dict[row][col] + 1.0) / (
+                            tags_counter[row] + 1)  # apply Laplace smoothing
 
 
 def emission_cal(root_dict, tags_counter):
@@ -45,7 +48,10 @@ def main():
     tags_counter = dict()
     sents = brown.tagged_sents(tagset='universal')
 
-    for sent in sents[0:2800]:
+    num_training_sents = int(round(len(
+            sents) * 0.95))  # used as start index of the first sentence of the training part in this case we extract only 95% of Brown corpus
+
+    for sent in sents[:num_training_sents]:
         if '<S>' not in tags_counter:
             tags_counter['<S>'] = 1
         else:

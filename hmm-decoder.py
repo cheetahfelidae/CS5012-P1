@@ -18,7 +18,9 @@ def main():
     correct_counter = 0
     words_counter = 0
 
-    for sent in sents[2800:]:
+    num_training_sents = int(round(len(sents) * 0.95))  # used as start index of the first sentence of the testing part
+
+    for sent in sents[num_training_sents:]:
         probability = defaultdict(dict)
         backpointer = defaultdict(dict)
 
