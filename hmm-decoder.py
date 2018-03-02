@@ -15,11 +15,17 @@ def main():
 
     sents = brown.tagged_sents(tagset='universal')
 
+    correct_counter = 0
+    words_counter = 0
+
     for sent in sents[2800:]:
         probability = defaultdict(dict)
         backpointer = defaultdict(dict)
 
         words = [w for (w, _) in sent]
+        tags = [t for (_, t) in sent]
+
+        words_counter += len(words)
 
         T = len(words)
         ##### Start of Viterbi #####
@@ -106,12 +112,15 @@ def main():
         taggedLine = ''
         tagsLen = len(posTags)
 
-        for word in words:
+        for i, word in enumerate(words):
             taggedLine += word + '/' + posTags[tagsLen - 1] + ' '
+            if posTags[tagsLen - 1] == tags[i]: correct_counter += 1
             tagsLen -= 1
 
-        fout.write(taggedLine.strip() + '\n')
+        # fout.write(taggedLine.strip() + '\n')
     fout.close()
+
+    print("Accuracy: " + str(correct_counter * 100.0 / words_counter) + "%")
 
 
 if __name__ == "__main__": main()
