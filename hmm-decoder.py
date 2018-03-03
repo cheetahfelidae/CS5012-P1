@@ -101,6 +101,9 @@ def start_viterbi(sents, emiss_table, transit_table):
 
         ''' 
            ------------------------------------------- termination step -------------------------------------------
+           - get the final state (tag)
+           - backtrace from the final state
+           - write the backtrace path to the file
         '''
         t = t - 1
         post_tags = list()  # containing the backtrace path to states back in time from backpointer
@@ -126,12 +129,12 @@ def start_viterbi(sents, emiss_table, transit_table):
             tagged_line += word + '/' + post_tags[tags_len - 1] + ' '
             if post_tags[tags_len - 1] == tags[i]: correct_count += 1
             tags_len -= 1
-
         fout.write(tagged_line.strip() + '\n')
 
     fout.close()
 
-    print("Accuracy: " + str(round(correct_count * 100.0 / word_count, 2)) + "%")
+    print("Accuracy: " + str(
+            round(correct_count * 100.0 / word_count, 2)) + "%")  # calculate and show the accuracy rate
 
 
 def main():
