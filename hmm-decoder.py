@@ -11,6 +11,8 @@ def start_viterbi(sents, emiss_table, transit_table):
 
     trained_tags = transit_table.keys()
 
+    fout = open("hmm-output.txt", 'w')
+
     for sent in sents:
         viterbi = defaultdict(dict)  # a path probability matrix viterbi
         back_pointer = defaultdict(dict)
@@ -24,13 +26,16 @@ def start_viterbi(sents, emiss_table, transit_table):
             ------------------------------------------- Initialisation Step ------------------------------------------
             - Set each state in the first column to the product of the transition probability (into it from the start state)
             and the observation probability (of the first word (t = 0)) 
+            
+                - known words condition
+                - unknown words condition
         '''
-        if words[0] in emiss_table:  # known words
+        if words[0] in emiss_table:
             for s in emiss_table[words[0]]:
                 viterbi[s][0] = transit_table['<S>'][s] * emiss_table[words[0]][s]
                 back_pointer[s][0] = '<S>'
 
-        else:  # unknown words
+        else:
             for s in trained_tags:
                 if s != '<S>':
                     viterbi[s][0] = transit_table['<S>'][s]
@@ -94,24 +99,26 @@ def start_viterbi(sents, emiss_table, transit_table):
                         back_pointer[s][t] = cur_back_pointer
             t += 1
 
-        ''' termination step '''
-        post_tags = list()
+        ''' 
+           ------------------------------------------- termination step -------------------------------------------
+        '''
+        t = t - 1
+        post_tags = list()  # containing the backtrace path to states back in time from backpointer
 
         max_val = -sys.maxint - 1
         most_state = ''
         for s in trained_tags:
-            if t - 1 in viterbi[s] and viterbi[s][t - 1] > max_val:
-                max_val = viterbi[s][t - 1]
+            if t in viterbi[s] and viterbi[s][t] > max_val:
+                max_val = viterbi[s][t]
                 most_state = s
 
         post_tags.append(most_state)
-        prev_state = most_state
 
-        counter = t - 1
-        while counter > 0:
-            prev_state = back_pointer[prev_state][counter]
+        prev_state = most_state
+        while t > 0:
+            prev_state = back_pointer[prev_state][t]
             post_tags.append(prev_state)
-            counter -= 1
+            t -= 1
 
         tagged_line = ''
         tags_len = len(post_tags)
@@ -120,11 +127,11 @@ def start_viterbi(sents, emiss_table, transit_table):
             if post_tags[tags_len - 1] == tags[i]: correct_count += 1
             tags_len -= 1
 
-        # fout = open("hmm-output.txt", 'w')
-        # fout.write(taggedLine.strip() + '\n')
-        # fout.close()
+        fout.write(tagged_line.strip() + '\n')
 
-    print("Accuracy: " + str(correct_count * 100.0 / word_count) + "%")
+    fout.close()
+
+    print("Accuracy: " + str(round(correct_count * 100.0 / word_count, 2)) + "%")
 
 
 def main():

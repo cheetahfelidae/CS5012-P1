@@ -108,3 +108,5 @@ venv.bak/
 .idea
 
 *.iml
+/hmm-model.txt
+/hmm-output.txt
