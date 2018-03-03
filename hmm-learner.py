@@ -4,81 +4,81 @@ from collections import defaultdict
 from nltk.corpus import brown
 
 
-def map_word_to_tag(word, tag, root_dict):
-    if word not in root_dict:
-        root_dict[word][tag] = 1
-    elif tag not in root_dict[word]:
-        root_dict[word][tag] = 1
+def count_word_to_tag(word, tag, emiss_table):
+    if word not in emiss_table:
+        emiss_table[word][tag] = 1
+    elif tag not in emiss_table[word]:
+        emiss_table[word][tag] = 1
     else:
-        root_dict[word][tag] += 1
+        emiss_table[word][tag] += 1
 
 
-def count(prev_tag, cur_tag, tags_dict):
-    if prev_tag not in tags_dict:
-        tags_dict[prev_tag][cur_tag] = 1
-    elif cur_tag not in tags_dict[prev_tag]:
-        tags_dict[prev_tag][cur_tag] = 1
+def count_prev_tag_to_cur_tag(prev_tag, cur_tag, transit_table):
+    if prev_tag not in transit_table:
+        transit_table[prev_tag][cur_tag] = 1
+    elif cur_tag not in transit_table[prev_tag]:
+        transit_table[prev_tag][cur_tag] = 1
     else:
-        tags_dict[prev_tag][cur_tag] += 1
+        transit_table[prev_tag][cur_tag] += 1
 
 
-def transition_cal(tags_dict, tags_counter):
-    total_tags = len(tags_dict) - 1  # one less because of start of sentence <S>
+def create_transit_table(transit_table, tags_counter):
+    total_tags = len(transit_table) - 1  # one less because of start of sentence <S>
 
-    for i in tags_dict:
-        for j in tags_dict:
+    for i in transit_table:
+        for j in transit_table:
             if j != '<S>':
-                if j not in tags_dict[i]:
-                    tags_dict[i][j] = 0  # fill empty cells with zero value
+                if j not in transit_table[i]:
+                    transit_table[i][j] = 0  # fill empty cells with zero value
                 else:
-                    tags_dict[i][j] = (tags_dict[i][j] + 1.0) / (
+                    transit_table[i][j] = (transit_table[i][j] + 1.0) / (
                             tags_counter[i] + total_tags)  # apply Laplace smoothing
 
 
-def emission_cal(root_dict, tags_counter):
+def create_emiss_table(root_dict, tags_counter):
     for i in root_dict:
         for j in root_dict[i]:
             root_dict[i][j] = root_dict[i][j] * 1.0 / tags_counter[j]
 
 
 def main():
-    obser_table = defaultdict(
+    emiss_table = defaultdict(
             dict)  # containing word-tag mapping with number of occurrences of the word (observation likelihood)
-    trans_table = defaultdict(dict)  # containing transition values (transition probabilities)
-    tags_counter = dict()
+    transit_table = defaultdict(dict)  # containing transition values (transition probabilities)
+    tag_counters = dict()
 
     sents = brown.tagged_sents(tagset='universal')
     sents = sents[
             :int(round(len(sents) * 0.95))]  # only 95% of sentences from the beginning being used as training data
 
     for sent in sents:
-        if '<S>' not in tags_counter:
-            tags_counter['<S>'] = 1
+        if '<S>' not in tag_counters:
+            tag_counters['<S>'] = 1
         else:
-            tags_counter['<S>'] += 1
+            tag_counters['<S>'] += 1
 
         cur_tag = '<S>'
         for token in sent:
             word = token[0]  # giving the word
             tag = token[1]  # giving the POS tag
 
-            map_word_to_tag(word, tag, obser_table)
+            count_word_to_tag(word, tag, emiss_table)
 
             # logic for transition probability dict
             prev_tag = cur_tag
             cur_tag = tag
 
-            count(prev_tag, cur_tag, trans_table)
+            count_prev_tag_to_cur_tag(prev_tag, cur_tag, transit_table)
 
             # update the number of occurrences of the (new) tag
-            tags_counter[tag] = 1 if tag not in tags_counter else tags_counter[tag] + 1
+            tag_counters[tag] = 1 if tag not in tag_counters else tag_counters[tag] + 1
 
-    transition_cal(trans_table, tags_counter)
+    create_transit_table(transit_table, tag_counters)
 
-    emission_cal(obser_table, tags_counter)
+    create_emiss_table(emiss_table, tag_counters)
 
     with open('hmm-model.txt', 'w') as outfile:
-        json.dump({"Transition": trans_table, "Emission": obser_table}, outfile, indent=4)
+        json.dump({"Transition": transit_table, "Emission": emiss_table}, outfile, indent=4)
 
 
 if __name__ == "__main__": main()

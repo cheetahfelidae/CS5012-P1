@@ -5,9 +5,9 @@ import sys
 from nltk.corpus import brown
 
 
-def viterbi_algo(sents, emission_table, transit_table):
-    correct_counter = 0  # the number of the correct guess
-    words_counter = 0  # the number of testing words
+def start_viterbi(sents, emiss_table, transit_table):
+    correct_count = 0  # the number of the correct guess
+    word_count = 0  # the number of testing words
 
     trained_tags = transit_table.keys()
 
@@ -18,14 +18,16 @@ def viterbi_algo(sents, emission_table, transit_table):
         words = [w for (w, _) in sent]
         tags = [t for (_, t) in sent]
 
-        words_counter += len(words)
+        word_count += len(words)
 
-        word = words[0]
-
-        ''' initialisation step '''
-        if word in emission_table:  # known words
-            for s in emission_table[word]:
-                viterbi[s][0] = transit_table['<S>'][s] * emission_table[word][s]
+        ''' 
+            ------------------------------------------- Initialisation Step ------------------------------------------
+            - Set each state in the first column to the product of the transition probability (into it from the start state)
+            and the observation probability (of the first word (t = 0)) 
+        '''
+        if words[0] in emiss_table:  # known words
+            for s in emiss_table[words[0]]:
+                viterbi[s][0] = transit_table['<S>'][s] * emiss_table[words[0]][s]
                 back_pointer[s][0] = '<S>'
 
         else:  # unknown words
@@ -34,41 +36,58 @@ def viterbi_algo(sents, emission_table, transit_table):
                     viterbi[s][0] = transit_table['<S>'][s]
                     back_pointer[s][0] = '<S>'
 
-        ''' recursion step '''
+        ''' 
+            ------------------------------------------- Recursion Step ---------------------------------------------
+            - For every state in column 1, compute the probability of moving into each state in column 2, and so on.
+            - For each state qj at time t, compute the value viterbi[s, t] 
+            by taking the maximum over the extensions of all the paths that lead to the current cell 
+         '''
         t = 1
         while t < len(words):
-            word = words[t]
-
-            ### get the tags of previous word - Remember tags may have <S> so cover that case in conditions ###
-            if words[t - 1] in emission_table:
-                prev_tags = emission_table[words[t - 1]].keys()
+            '''
+                - get the previous-word tags
+                    - known words condition
+                    - unknown words condition
+                        - include <S> but it will be covered in the conditions later
+            '''
+            if words[t - 1] in emiss_table:
+                prev_tags = emiss_table[words[t - 1]].keys()
             else:
                 prev_tags = trained_tags
 
-            if word in emission_table:  # known words
-                for s in emission_table[word]:
+            '''
+                - find the maximum of the product of three factors as follow:
+                    # the previous viterbi path probability from the previous time step
+                    # the transition probability from the previous state qi to current state qj
+                    # the state observation likelihood of the observation symbol ot given the current state j
+                    
+                    - known words condition
+                    - unknown words condition
+            '''
+            if words[t] in emiss_table:
+                for s in emiss_table[words[t]]:
                     max_val = -sys.maxint - 1
                     cur_back_pointer = ''
                     for k in prev_tags:
                         if k != '<S>':
-                            prob_val = viterbi[k][t - 1] * transit_table[k][s] * emission_table[word][s]
-                            if prob_val > max_val:
-                                max_val = prob_val
+                            val = viterbi[k][t - 1] * transit_table[k][s] * emiss_table[words[t]][s]
+                            if val > max_val:
+                                max_val = val
                                 cur_back_pointer = k
 
                     viterbi[s][t] = max_val
                     back_pointer[s][t] = cur_back_pointer
 
-            else:  # unknown words
+            else:
                 for s in trained_tags:
                     if s != '<S>':
                         max_val = -sys.maxint - 1
                         cur_back_pointer = ''
                         for k in prev_tags:
                             if k != '<S>':
-                                prob_val = viterbi[k][t - 1] * transit_table[k][s]
-                                if prob_val > max_val:
-                                    max_val = prob_val
+                                val = viterbi[k][t - 1] * transit_table[k][s]
+                                if val > max_val:
+                                    max_val = val
                                     cur_back_pointer = k
 
                         viterbi[s][t] = max_val
@@ -98,14 +117,14 @@ def viterbi_algo(sents, emission_table, transit_table):
         tags_len = len(post_tags)
         for i, word in enumerate(words):
             tagged_line += word + '/' + post_tags[tags_len - 1] + ' '
-            if post_tags[tags_len - 1] == tags[i]: correct_counter += 1
+            if post_tags[tags_len - 1] == tags[i]: correct_count += 1
             tags_len -= 1
 
         # fout = open("hmm-output.txt", 'w')
         # fout.write(taggedLine.strip() + '\n')
         # fout.close()
 
-    print("Accuracy: " + str(correct_counter * 100.0 / words_counter) + "%")
+    print("Accuracy: " + str(correct_count * 100.0 / word_count) + "%")
 
 
 def main():
@@ -118,7 +137,7 @@ def main():
     sents = brown.tagged_sents(tagset='universal')
     sents = sents[int(round(len(sents) * 0.95)):]  # only 5% of sentences from the end being used as testing data
 
-    viterbi_algo(sents, emission_table, transit_table)
+    start_viterbi(sents, emission_table, transit_table)
 
 
 if __name__ == "__main__": main()
