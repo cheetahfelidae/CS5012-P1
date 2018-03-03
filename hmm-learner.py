@@ -25,20 +25,20 @@ def count(prev_tag, cur_tag, tags_dict):
 def transition_cal(tags_dict, tags_counter):
     total_tags = len(tags_dict) - 1  # one less because of start of sentence <S>
 
-    for row in tags_dict:
-        for col in tags_dict:
-            if col != '<S>':
-                if col not in tags_dict[row]:
-                    tags_dict[row][col] = 0  # fill empty cells with zero value
+    for i in tags_dict:
+        for j in tags_dict:
+            if j != '<S>':
+                if j not in tags_dict[i]:
+                    tags_dict[i][j] = 0  # fill empty cells with zero value
                 else:
-                    tags_dict[row][col] = (tags_dict[row][col] + 1.0) / (
-                            tags_counter[row] + 1)  # apply Laplace smoothing
+                    tags_dict[i][j] = (tags_dict[i][j] + 1.0) / (
+                            tags_counter[i] + total_tags)  # apply Laplace smoothing
 
 
 def emission_cal(root_dict, tags_counter):
-    for row in root_dict:
-        for col in root_dict[row]:
-            root_dict[row][col] = root_dict[row][col] * 1.0 / tags_counter[col]
+    for i in root_dict:
+        for j in root_dict[i]:
+            root_dict[i][j] = root_dict[i][j] * 1.0 / tags_counter[j]
 
 
 def main():
@@ -46,12 +46,12 @@ def main():
             dict)  # containing word-tag mapping with number of occurrences of the word (observation likelihood)
     trans_table = defaultdict(dict)  # containing transition values (transition probabilities)
     tags_counter = dict()
+
     sents = brown.tagged_sents(tagset='universal')
+    sents = sents[
+            :int(round(len(sents) * 0.95))]  # only 95% of sentences from the beginning being used as training data
 
-    num_training_sents = int(round(len(
-            sents) * 0.95))  # used as start index of the first sentence of the training part in this case we extract only 95% of Brown corpus
-
-    for sent in sents[:num_training_sents]:
+    for sent in sents:
         if '<S>' not in tags_counter:
             tags_counter['<S>'] = 1
         else:

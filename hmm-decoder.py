@@ -1,128 +1,124 @@
 import json
 from collections import defaultdict
+
+import sys
 from nltk.corpus import brown
 
 
-def main():
-    # Load the HMM model
-    with open('hmm-model.txt') as model_file:
-        modelData = json.load(model_file)
-        trans_table = modelData["Transition"]
-        emission_table = modelData["Emission"]
-        allPossibleTags = trans_table.keys()  # all possible tags from the model
+def viterbi_algo(sents, emission_table, transit_table):
+    correct_counter = 0  # the number of the correct guess
+    words_counter = 0  # the number of testing words
 
-    fout = open("hmm-output.txt", 'w')
+    trained_tags = transit_table.keys()
 
-    sents = brown.tagged_sents(tagset='universal')
-
-    correct_counter = 0
-    words_counter = 0
-
-    num_training_sents = int(round(len(sents) * 0.95))  # used as start index of the first sentence of the testing part
-
-    for sent in sents[num_training_sents:]:
-        probability = defaultdict(dict)
-        backpointer = defaultdict(dict)
+    for sent in sents:
+        viterbi = defaultdict(dict)  # a path probability matrix viterbi
+        back_pointer = defaultdict(dict)
 
         words = [w for (w, _) in sent]
         tags = [t for (_, t) in sent]
 
         words_counter += len(words)
 
-        T = len(words)
-        ##### Start of Viterbi #####
-
-        ## Initialization at t=1 ##
         word = words[0]
 
-        ##### If the word is seen #####
-        if word in emission_table:
-            for eachTag in emission_table[word]:
-                probability[eachTag][0] = trans_table['<S>'][eachTag] * emission_table[word][eachTag]
-                backpointer[eachTag][0] = '<S>'
-        ##### If the word is unseen #####
-        else:
-            for eachTag in allPossibleTags:
-                if eachTag != '<S>':
-                    probability[eachTag][0] = trans_table['<S>'][eachTag]
-                    backpointer[eachTag][0] = '<S>'
+        ''' initialisation step '''
+        if word in emission_table:  # known words
+            for s in emission_table[word]:
+                viterbi[s][0] = transit_table['<S>'][s] * emission_table[word][s]
+                back_pointer[s][0] = '<S>'
 
-        ## Recursion Step T=2 onwards ##
-        itr = 1
-        while (itr < T):
-            word = words[itr]
+        else:  # unknown words
+            for s in trained_tags:
+                if s != '<S>':
+                    viterbi[s][0] = transit_table['<S>'][s]
+                    back_pointer[s][0] = '<S>'
 
-            ### get the tags of previous word - Remember tags may have S0 so cover that case in conditions ###
-            if words[itr - 1] in emission_table:
-                previousTagsList = emission_table[words[itr - 1]].keys()
+        ''' recursion step '''
+        t = 1
+        while t < len(words):
+            word = words[t]
+
+            ### get the tags of previous word - Remember tags may have <S> so cover that case in conditions ###
+            if words[t - 1] in emission_table:
+                prev_tags = emission_table[words[t - 1]].keys()
             else:
-                previousTagsList = allPossibleTags
+                prev_tags = trained_tags
 
-            ##### If the word is seen #####
-            if word in emission_table:
-                for eachTag in emission_table[word]:
-                    maxVal = -1000
-                    currentBackPtr = ''
-                    for eachPrevTag in previousTagsList:
-                        if eachPrevTag != '<S>':
-                            probabilityVal = probability[eachPrevTag][itr - 1] * trans_table[eachPrevTag][
-                                eachTag] * emission_table[word][eachTag]
-                            if probabilityVal > maxVal:
-                                maxVal = probabilityVal
-                                currentBackPtr = eachPrevTag
+            if word in emission_table:  # known words
+                for s in emission_table[word]:
+                    max_val = -sys.maxint - 1
+                    cur_back_pointer = ''
+                    for k in prev_tags:
+                        if k != '<S>':
+                            prob_val = viterbi[k][t - 1] * transit_table[k][s] * emission_table[word][s]
+                            if prob_val > max_val:
+                                max_val = prob_val
+                                cur_back_pointer = k
 
-                    probability[eachTag][itr] = maxVal
-                    backpointer[eachTag][itr] = currentBackPtr
+                    viterbi[s][t] = max_val
+                    back_pointer[s][t] = cur_back_pointer
 
-            ##### If the word is seen #####
-            else:
-                for eachTag in allPossibleTags:
-                    if eachTag != '<S>':
-                        maxVal = -1000
-                        currentBackPtr = ''
-                        for eachPrevTag in previousTagsList:
-                            if eachPrevTag != '<S>':
-                                probabilityVal = probability[eachPrevTag][itr - 1] * trans_table[eachPrevTag][
-                                    eachTag]
-                                if probabilityVal > maxVal:
-                                    maxVal = probabilityVal
-                                    currentBackPtr = eachPrevTag
+            else:  # unknown words
+                for s in trained_tags:
+                    if s != '<S>':
+                        max_val = -sys.maxint - 1
+                        cur_back_pointer = ''
+                        for k in prev_tags:
+                            if k != '<S>':
+                                prob_val = viterbi[k][t - 1] * transit_table[k][s]
+                                if prob_val > max_val:
+                                    max_val = prob_val
+                                    cur_back_pointer = k
 
-                        probability[eachTag][itr] = maxVal
-                        backpointer[eachTag][itr] = currentBackPtr
+                        viterbi[s][t] = max_val
+                        back_pointer[s][t] = cur_back_pointer
+            t += 1
 
-            itr += 1
+        ''' termination step '''
+        post_tags = list()
 
-        ##### Termination Step #####
-        posTags = list()
+        max_val = -sys.maxint - 1
+        most_state = ''
+        for s in trained_tags:
+            if t - 1 in viterbi[s] and viterbi[s][t - 1] > max_val:
+                max_val = viterbi[s][t - 1]
+                most_state = s
 
-        maxProbableVal = -10000
-        mostProbableState = ''
-        for state in allPossibleTags:
-            if (itr - 1) in probability[state] and probability[state][itr - 1] > maxProbableVal:
-                maxProbableVal = probability[state][itr - 1]
-                mostProbableState = state
+        post_tags.append(most_state)
+        prev_state = most_state
 
-        posTags.append(mostProbableState)
-        counter = itr - 1
-        prevState = mostProbableState
-
-        while (counter > 0):
-            prevState = backpointer[prevState][counter]
+        counter = t - 1
+        while counter > 0:
+            prev_state = back_pointer[prev_state][counter]
+            post_tags.append(prev_state)
             counter -= 1
-            posTags.append(prevState)
-        taggedLine = ''
-        tagsLen = len(posTags)
 
+        tagged_line = ''
+        tags_len = len(post_tags)
         for i, word in enumerate(words):
-            taggedLine += word + '/' + posTags[tagsLen - 1] + ' '
-            if posTags[tagsLen - 1] == tags[i]: correct_counter += 1
-            tagsLen -= 1
+            tagged_line += word + '/' + post_tags[tags_len - 1] + ' '
+            if post_tags[tags_len - 1] == tags[i]: correct_counter += 1
+            tags_len -= 1
 
+        # fout = open("hmm-output.txt", 'w')
         # fout.write(taggedLine.strip() + '\n')
-    fout.close()
+        # fout.close()
 
     print("Accuracy: " + str(correct_counter * 100.0 / words_counter) + "%")
+
+
+def main():
+    # Load the HMM model
+    with open('hmm-model.txt') as model_file:
+        model = json.load(model_file)
+        transit_table = model["Transition"]
+        emission_table = model["Emission"]
+
+    sents = brown.tagged_sents(tagset='universal')
+    sents = sents[int(round(len(sents) * 0.95)):]  # only 5% of sentences from the end being used as testing data
+
+    viterbi_algo(sents, emission_table, transit_table)
 
 
 if __name__ == "__main__": main()
