@@ -1,7 +1,7 @@
 from __future__ import print_function
 import json
 from collections import defaultdict
-from nltk.corpus import brown
+from nltk.corpus import brown, conll2000, alpino, floresta, dependency_treebank, treebank, conll2002
 
 
 def count_word_to_tag(word, tag, emiss_table):
@@ -48,6 +48,12 @@ def main():
     tag_counters = dict()
 
     sents = brown.tagged_sents(tagset='universal')
+    sents = conll2000.tagged_sents(tagset='universal')
+    sents = conll2002.tagged_sents()
+    sents = alpino.tagged_sents()
+    sents = dependency_treebank.tagged_sents()
+    sents = treebank.tagged_sents()
+    sents = floresta.tagged_sents()
     sents = sents[
             :int(round(len(sents) * 0.95))]  # only 95% of sentences from the beginning being used as training data
 

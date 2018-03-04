@@ -2,7 +2,7 @@ import json
 from collections import defaultdict
 
 import sys
-from nltk.corpus import brown
+from nltk.corpus import brown, conll2000, alpino, floresta, dependency_treebank, treebank, conll2002
 
 
 def start_viterbi(sents, emiss_table, transit_table):
@@ -129,7 +129,7 @@ def start_viterbi(sents, emiss_table, transit_table):
             tagged_line += word + '/' + post_tags[tags_len - 1] + ' '
             if post_tags[tags_len - 1] == tags[i]: correct_count += 1
             tags_len -= 1
-        fout.write(tagged_line.strip() + '\n')
+        # fout.write(tagged_line.strip() + '\n')
 
     fout.close()
 
@@ -144,7 +144,13 @@ def main():
         transit_table = model["Transition"]
         emission_table = model["Emission"]
 
-    sents = brown.tagged_sents(tagset='universal')
+    # sents = brown.tagged_sents(tagset='universal')
+    # sents = conll2000.tagged_sents(tagset='universal')
+    # sents = conll2002.tagged_sents()
+    # sents = alpino.tagged_sents()
+    # sents = dependency_treebank.tagged_sents()
+    # sents = treebank.tagged_sents()
+    sents = floresta.tagged_sents()
     sents = sents[int(round(len(sents) * 0.95)):]  # only 5% of sentences from the end being used as testing data
 
     start_viterbi(sents, emission_table, transit_table)

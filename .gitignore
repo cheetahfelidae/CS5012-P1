@@ -110,3 +110,4 @@ venv.bak/
 *.iml
 /hmm-model.txt
 /hmm-output.txt
+/test.py
