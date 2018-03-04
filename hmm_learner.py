@@ -41,6 +41,8 @@ def create_emiss_table(root_dict, tags_counter):
 
 
 def hmm_learner(sents, model_file):
+    print("(1/4) Creating the HMM model for the selected corpus")
+
     emiss_table = defaultdict(
             dict)  # containing word-tag mapping with number of occurrences of the word (observation likelihood)
     transit_table = defaultdict(dict)  # containing transition values (transition probabilities)
@@ -74,3 +76,5 @@ def hmm_learner(sents, model_file):
 
     with open(model_file, 'w') as f_out:
         json.dump({"Transition": transit_table, "Emission": emiss_table}, f_out, indent=4)
+
+    print("(2/4) The generated model is written to " + model_file)

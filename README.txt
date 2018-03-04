@@ -1,26 +1,28 @@
-##### README file for hmm-pos-tagger #####
+##### README File for Hidden Markov Model part-of-speech tagger #####
 
-This is a Hidden Markov Model part-of-speech tagger for Catalan. Program uses HMM for modeling/learning the tagged corpus and the Viterbi Algorithm for decoding. Laplace smoothing is used in learning to cover unseen words and tags transitions.
+- Program uses HMM for modeling and learning the tagged corpus and the Viterbi Algorithm for decoding.
+- Laplace smoothing is used in learning to cover unseen words and tags transitions.
 
-The accuracy of this utility is 94.23%
+Source Code : There are 3 python files as follow.
+    main.py -> This is main python file which will run hmm_learn.py and hmm_decode.py consecutively.
 
-Source Code : There are 2 main python files.
+	    - hmm_learn.py --> This is used for learning existing tagged corpus and generating the model for decoding.
 
-Usage:
-	1. hmmlearn3.py --> This is the python code to learn existing tagged corpus and generate the model for decoding.
+	    - hmm_decode.py --> This is used for decoding untagged corpus and assigning tags to them.
 
-	Input: Give the input path of tagged corpus file (corpus -> catalan_corpus_train_tagged.txt)
+Usage :
+    main.py --> there are 3 required commandline arguments as below
+        - the desired corpus which is used as training and testing data (95% for training and the remaining for testing)
+            there are available seven corpora for this programme
+                1. 'brown'
+                2. 'conll2000'
+                3. 'conll2002'
+                4. 'alpino'
+                5. 'dependency_treebank'
+                6. 'treebank'
+                7. 'floresta'
 
-	eg. > python hmmlearn3.py /path/to/input
+        - the output path of the generated model
+        - the output path of the words with their assigned tags
 
-	Output: This will output "hmmmodel.txt" file (sample model fileavailable in Sample Outputs folder).
-
-	2. hmmdecode3.py --> This is the python code to decode untagged corpus and assign tags to them.
-
-	Input: Give the input path of raw untagged corpus file (corpus -> catalan_corpus_dev_raw.txt). The code picks up the hmmmodel.txt internally.
-
-	> python hmmdecode3.py /path/to/input
-
-	Output: This will output "hmmoutput.txt" file (sample model fileavailable in Sample Outputs folder). You can compare this output with standard output file available in (corpus -> catalan_corpus_dev_tagged.txt) for accuracy calculation.
-
-Note: Corpus folder also includes a small english corpus for small scale testing.
+        e.g. python main.py brown hmm-model.txt hmm_output.txt

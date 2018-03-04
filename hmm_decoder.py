@@ -132,11 +132,15 @@ def start_viterbi(sents, emiss_table, transit_table, output_file):
 
     f_out.close()
 
-    print("Accuracy: " + str(
+    print("(4/4) The output file showing words with their assigned tags is written to " + output_file)
+    print("")
+    print("Accuracy Rate: " + str(
             round(correct_count * 100.0 / word_count, 2)) + "%")  # calculate and show the accuracy rate
 
 
 def hmm_decoder(sents, model_file, output_file):
+    print("(3/4) Applying the trained HMM on each testing sentence and assigning a tag to each word")
+
     # Load the HMM model
     with open(model_file) as f_model:
         model = json.load(f_model)
