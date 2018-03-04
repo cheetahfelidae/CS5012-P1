@@ -1,3 +1,4 @@
+import io
 import json
 from collections import defaultdict
 
@@ -11,7 +12,7 @@ def start_viterbi(sents, emiss_table, transit_table):
 
     trained_tags = transit_table.keys()
 
-    fout = open("hmm-output.txt", 'w')
+    output_file = io.open("hmm-output.txt", mode='w', encoding='utf-8')
 
     for sent in sents:
         viterbi = defaultdict(dict)  # a path probability matrix viterbi
@@ -129,9 +130,9 @@ def start_viterbi(sents, emiss_table, transit_table):
             tagged_line += word + '/' + post_tags[tags_len - 1] + ' '
             if post_tags[tags_len - 1] == tags[i]: correct_count += 1
             tags_len -= 1
-        # fout.write(tagged_line.strip() + '\n')
+        output_file.write(tagged_line.strip() + '\n')
 
-    fout.close()
+    output_file.close()
 
     print("Accuracy: " + str(
             round(correct_count * 100.0 / word_count, 2)) + "%")  # calculate and show the accuracy rate
