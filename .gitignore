@@ -108,6 +108,6 @@ venv.bak/
 .idea
 
 *.iml
-/hmm-model.txt
-/hmm-output.txt
+/hmm_model.txt
+/hmm_output.txt
 /test.py

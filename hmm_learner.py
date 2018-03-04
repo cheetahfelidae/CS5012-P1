@@ -1,7 +1,6 @@
 from __future__ import print_function
 import json
 from collections import defaultdict
-from nltk.corpus import brown, conll2000, alpino, floresta, dependency_treebank, treebank, conll2002
 
 
 def count_word_to_tag(word, tag, emiss_table):
@@ -41,21 +40,11 @@ def create_emiss_table(root_dict, tags_counter):
             root_dict[i][j] = root_dict[i][j] * 1.0 / tags_counter[j]
 
 
-def main():
+def hmm_learner(sents, model_file):
     emiss_table = defaultdict(
             dict)  # containing word-tag mapping with number of occurrences of the word (observation likelihood)
     transit_table = defaultdict(dict)  # containing transition values (transition probabilities)
     tag_counters = dict()
-
-    sents = brown.tagged_sents(tagset='universal')
-    sents = conll2000.tagged_sents(tagset='universal')
-    sents = conll2002.tagged_sents()
-    sents = alpino.tagged_sents()
-    sents = dependency_treebank.tagged_sents()
-    sents = treebank.tagged_sents()
-    sents = floresta.tagged_sents()
-    sents = sents[
-            :int(round(len(sents) * 0.95))]  # only 95% of sentences from the beginning being used as training data
 
     for sent in sents:
         if '<S>' not in tag_counters:
@@ -83,8 +72,5 @@ def main():
 
     create_emiss_table(emiss_table, tag_counters)
 
-    with open('hmm-model.txt', 'w') as outfile:
-        json.dump({"Transition": transit_table, "Emission": emiss_table}, outfile, indent=4)
-
-
-if __name__ == "__main__": main()
+    with open(model_file, 'w') as f_out:
+        json.dump({"Transition": transit_table, "Emission": emiss_table}, f_out, indent=4)

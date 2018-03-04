@@ -1,18 +1,16 @@
 import io
 import json
 from collections import defaultdict
-
 import sys
-from nltk.corpus import brown, conll2000, alpino, floresta, dependency_treebank, treebank, conll2002
 
 
-def start_viterbi(sents, emiss_table, transit_table):
+def start_viterbi(sents, emiss_table, transit_table, output_file):
     correct_count = 0  # the number of the correct guess
     word_count = 0  # the number of testing words
 
     trained_tags = transit_table.keys()
 
-    output_file = io.open("hmm-output.txt", mode='w', encoding='utf-8')
+    f_out = io.open(output_file, mode='w', encoding='utf-8')
 
     for sent in sents:
         viterbi = defaultdict(dict)  # a path probability matrix viterbi
@@ -130,31 +128,19 @@ def start_viterbi(sents, emiss_table, transit_table):
             tagged_line += word + '/' + post_tags[tags_len - 1] + ' '
             if post_tags[tags_len - 1] == tags[i]: correct_count += 1
             tags_len -= 1
-        output_file.write(tagged_line.strip() + '\n')
+        f_out.write(tagged_line.strip() + '\n')
 
-    output_file.close()
+    f_out.close()
 
     print("Accuracy: " + str(
             round(correct_count * 100.0 / word_count, 2)) + "%")  # calculate and show the accuracy rate
 
 
-def main():
+def hmm_decoder(sents, model_file, output_file):
     # Load the HMM model
-    with open('hmm-model.txt') as model_file:
-        model = json.load(model_file)
+    with open(model_file) as f_model:
+        model = json.load(f_model)
         transit_table = model["Transition"]
         emission_table = model["Emission"]
 
-    # sents = brown.tagged_sents(tagset='universal')
-    # sents = conll2000.tagged_sents(tagset='universal')
-    # sents = conll2002.tagged_sents()
-    # sents = alpino.tagged_sents()
-    # sents = dependency_treebank.tagged_sents()
-    # sents = treebank.tagged_sents()
-    sents = floresta.tagged_sents()
-    sents = sents[int(round(len(sents) * 0.95)):]  # only 5% of sentences from the end being used as testing data
-
-    start_viterbi(sents, emission_table, transit_table)
-
-
-if __name__ == "__main__": main()
+    start_viterbi(sents, emission_table, transit_table, output_file)
