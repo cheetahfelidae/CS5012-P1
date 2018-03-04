@@ -6,13 +6,13 @@ from hmm_decoder import hmm_decoder
 
 def main():
     if len(sys.argv) == 3:
-        # sents = brown.tagged_sents(tagset='universal')
-        sents = conll2000.tagged_sents(tagset='universal')
-        # sents = conll2002.tagged_sents()
-        # sents = alpino.tagged_sents()
-        # sents = dependency_treebank.tagged_sents()
-        # sents = treebank.tagged_sents()
-        # sents = floresta.tagged_sents()
+        # sents = brown.tagged_sents(tagset='universal')  # Accuracy: 95.12%
+        # sents = conll2000.tagged_sents(tagset='universal')  # Accuracy: 95.63%
+        # sents = conll2002.tagged_sents() # Accuracy: 89.45%
+        # sents = alpino.tagged_sents() # Accuracy: 88.79%
+        # sents = dependency_treebank.tagged_sents() # Accuracy: 90.79%
+        # sents = treebank.tagged_sents() # Accuracy: 91.44%
+        sents = floresta.tagged_sents() # Accuracy: 83.63%
 
         training_sents = sents[:int(round(len(
                 sents) * 0.95))]  # only 95% of sentences from the beginning being used as training data
