@@ -5,6 +5,8 @@ import sys
 
 
 def start_viterbi(sents, emiss_table, transit_table, output_file):
+    correct_tags = defaultdict(dict)
+    num_tags = defaultdict(dict)
     correct_count = 0  # the number of the correct guess
     word_count = 0  # the number of testing words
 
@@ -125,8 +127,15 @@ def start_viterbi(sents, emiss_table, transit_table, output_file):
         tagged_line = ''
         tags_len = len(post_tags)
         for i, word in enumerate(words):
-            tagged_line += word + '/' + post_tags[tags_len - 1] + ' '
-            if post_tags[tags_len - 1] == tags[i]: correct_count += 1
+            post_tag = post_tags[tags_len - 1]
+            tagged_line += word + '/' + post_tag + ' '
+
+            num_tags[post_tag] = 1 if post_tag not in num_tags else num_tags[post_tag] + 1
+
+            if post_tag == tags[i]:
+                correct_tags[post_tag] = 1 if post_tag not in correct_tags else correct_tags[post_tag] + 1
+                correct_count += 1
+
             tags_len -= 1
         f_out.write(tagged_line.strip() + '\n')
 
@@ -134,7 +143,11 @@ def start_viterbi(sents, emiss_table, transit_table, output_file):
 
     print("(4/4) The output file showing words with their assigned tags is written to " + output_file)
     print("")
-    print("Accuracy Rate: " + str(
+    print("Accuracy Rate for Each Tag: ")
+    for tag in correct_tags:
+        print("\t" + tag + ":  \t" + str(round(correct_tags[tag] * 100.0 / num_tags[tag], 2)) + "%")
+    print("")
+    print("Overall Accuracy Rate: " + str(
             round(correct_count * 100.0 / word_count, 2)) + "%")  # calculate and show the accuracy rate
 
 

@@ -6,8 +6,8 @@ from hmm_decoder import hmm_decoder
 
 def select_sents(x):
     return {
-        'brown'              : brown.tagged_sents(),  # Accuracy: 95.12%
-        'conll2000'          : conll2000.tagged_sents(),  # Accuracy: 95.63%
+        'brown'              : brown.tagged_sents(tagset='universal'),  # Accuracy: 95.12%
+        'conll2000'          : conll2000.tagged_sents(tagset='universal'),  # Accuracy: 95.63%
         'conll2002'          : conll2002.tagged_sents(),  # Accuracy: 89.45%
         'alpino'             : alpino.tagged_sents(),  # Accuracy: 88.79%
         'dependency_treebank': dependency_treebank.tagged_sents(),  # Accuracy: 90.79%
