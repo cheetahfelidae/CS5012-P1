@@ -1,11 +1,44 @@
+from __future__ import print_function
 import io
 import json
 from collections import defaultdict
 import sys
 
 
+def get_unique_tags(tags):
+    unique_tags = list()
+    for tag in tags:
+        if tag not in unique_tags:
+            unique_tags.append(tag)
+
+    return unique_tags
+
+
+def print_confusion_matrix(unique_ans_tags, unique_out_tags, out_tags):
+    with open("test.csv", "wb") as file:
+        # print all output tags for the first row
+        file.write(",")
+        for c in unique_out_tags:
+            file.write(c + ",")
+        file.write("\n")
+
+        for r in unique_ans_tags:
+            file.write(r + ",")
+            for c in unique_out_tags:
+                file.write(str(out_tags[r][c]) + ",")
+            file.write("\n")
+
+
+def print_accuracy_table(out_tags):
+    for tag in out_tags:
+        total = 0
+        for c in out_tags[tag]:
+            total += out_tags[tag][c]
+        print(tag + ":  \t" + str(round(out_tags[tag][tag] * 100.0 / total, 2)) + "%")
+
+
 def start_viterbi(sents, emiss_table, transit_table, output_file):
-    correct_tags = defaultdict(dict)
+    out_tags = defaultdict(dict)
     num_tags = defaultdict(dict)
     correct_count = 0  # the number of the correct guess
     word_count = 0  # the number of testing words
@@ -18,10 +51,10 @@ def start_viterbi(sents, emiss_table, transit_table, output_file):
         viterbi = defaultdict(dict)  # a path probability matrix viterbi
         back_pointer = defaultdict(dict)
 
-        words = [w for (w, _) in sent]
-        tags = [t for (_, t) in sent]
+        ans_words = [w for (w, _) in sent]
+        ans_tags = [t for (_, t) in sent]
 
-        word_count += len(words)
+        word_count += len(ans_words)
 
         ''' 
             ------------------------------------------- Initialisation Step ------------------------------------------
@@ -31,9 +64,9 @@ def start_viterbi(sents, emiss_table, transit_table, output_file):
                 - known words condition
                 - unknown words condition
         '''
-        if words[0] in emiss_table:
-            for s in emiss_table[words[0]]:
-                viterbi[s][0] = transit_table['<S>'][s] * emiss_table[words[0]][s]
+        if ans_words[0] in emiss_table:
+            for s in emiss_table[ans_words[0]]:
+                viterbi[s][0] = transit_table['<S>'][s] * emiss_table[ans_words[0]][s]
                 back_pointer[s][0] = '<S>'
 
         else:
@@ -49,15 +82,15 @@ def start_viterbi(sents, emiss_table, transit_table, output_file):
             by taking the maximum over the extensions of all the paths that lead to the current cell 
          '''
         t = 1
-        while t < len(words):
+        while t < len(ans_words):
             '''
                 - get the previous-word tags
                     - known words condition
                     - unknown words condition
                         - include <S> but it will be covered in the conditions later
             '''
-            if words[t - 1] in emiss_table:
-                prev_tags = emiss_table[words[t - 1]].keys()
+            if ans_words[t - 1] in emiss_table:
+                prev_tags = emiss_table[ans_words[t - 1]].keys()
             else:
                 prev_tags = trained_tags
 
@@ -70,13 +103,13 @@ def start_viterbi(sents, emiss_table, transit_table, output_file):
                     - known words condition
                     - unknown words condition
             '''
-            if words[t] in emiss_table:
-                for s in emiss_table[words[t]]:
+            if ans_words[t] in emiss_table:
+                for s in emiss_table[ans_words[t]]:
                     max_val = -sys.maxint - 1
                     cur_back_pointer = ''
                     for k in prev_tags:
                         if k != '<S>':
-                            val = viterbi[k][t - 1] * transit_table[k][s] * emiss_table[words[t]][s]
+                            val = viterbi[k][t - 1] * transit_table[k][s] * emiss_table[ans_words[t]][s]
                             if val > max_val:
                                 max_val = val
                                 cur_back_pointer = k
@@ -126,15 +159,18 @@ def start_viterbi(sents, emiss_table, transit_table, output_file):
 
         tagged_line = ''
         tags_len = len(post_tags)
-        for i, word in enumerate(words):
+        for i, word in enumerate(ans_words):
             post_tag = post_tags[tags_len - 1]
             tagged_line += word + '/' + post_tag + ' '
 
             num_tags[post_tag] = 1 if post_tag not in num_tags else num_tags[post_tag] + 1
 
-            if post_tag == tags[i]:
-                correct_tags[post_tag] = 1 if post_tag not in correct_tags else correct_tags[post_tag] + 1
-                correct_count += 1
+            if post_tag not in out_tags:
+                out_tags[post_tag][ans_tags[i]] = 1
+            elif ans_tags[i] not in out_tags[post_tag]:
+                out_tags[post_tag][ans_tags[i]] = 1
+            else:
+                out_tags[post_tag][ans_tags[i]] += 1
 
             tags_len -= 1
         f_out.write(tagged_line.strip() + '\n')
@@ -142,13 +178,30 @@ def start_viterbi(sents, emiss_table, transit_table, output_file):
     f_out.close()
 
     print("(4/4) The output file showing words with their assigned tags is written to " + output_file)
+
+    all_ans_tags = list()
+    for sent in sents:
+        all_ans_tags.extend([t for (_, t) in sent])
+
+    unique_ans_tags = get_unique_tags(all_ans_tags)
+    unique_out_tags = get_unique_tags(out_tags)
+
+    # add zero to empty cells of the confusion matrix
+    for r in unique_ans_tags:
+        for c in unique_out_tags:
+            if r not in out_tags:
+                out_tags[r][c] = 0
+            elif c not in out_tags[r]:
+                out_tags[r][c] = 0
+
+    print_confusion_matrix(unique_ans_tags, unique_out_tags, out_tags)
+
     print("")
-    print("Accuracy Rate for Each Tag: ")
-    for tag in correct_tags:
-        print("\t" + tag + ":  \t" + str(round(correct_tags[tag] * 100.0 / num_tags[tag], 2)) + "%")
-    print("")
-    print("Overall Accuracy Rate: " + str(
-            round(correct_count * 100.0 / word_count, 2)) + "%")  # calculate and show the accuracy rate
+    print("Accuracy Rate for Each Tag")
+    print_accuracy_table(out_tags)
+
+    # print("Overall Accuracy Rate: " + str(
+    #         round(correct_count * 100.0 / word_count, 2)) + "%")  # calculate and show the accuracy rate
 
 
 def hmm_decoder(sents, model_file, output_file):
