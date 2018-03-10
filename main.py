@@ -1,20 +1,19 @@
 import sys
-from nltk.corpus import brown, conll2000, alpino, floresta, dependency_treebank, treebank, conll2002
+from nltk.corpus import brown, conll2000, alpino, dependency_treebank, treebank, conll2002
 from hmm_learner import hmm_learner
 from hmm_decoder import hmm_decoder
 
 
 def select_sents(x):
     return {
-        'brown_tag'          : brown.tagged_sents(tagset='universal'),  # Accuracy: 95.12% -> 91.54
-        'brown'              : brown.tagged_sents(),  # Accuracy: 64.59%
-        'conll2000_tag'      : conll2000.tagged_sents(tagset='universal'),  # Accuracy: 95.63% -> 96.75
-        'conll2000'          : conll2000.tagged_sents(),  # Accuracy: -> 95.28
-        'conll2002'          : conll2002.tagged_sents(),  # Accuracy: 89.45% -> 90.16%
-        'alpino'             : alpino.tagged_sents(),  # Accuracy: 88.79% -> 76.99%
+        'brown_tag'          : brown.tagged_sents(tagset='universal'),  # Accuracy: 95.12% -> 89.42%
+        'brown'              : brown.tagged_sents(),  # Accuracy: 64.43%
+        'conll2000_tag'      : conll2000.tagged_sents(tagset='universal'),  # Accuracy: 95.63% -> 92.99
+        'conll2000'          : conll2000.tagged_sents(),  # Accuracy: -> 94.00
+        'conll2002'          : conll2002.tagged_sents(),  # Accuracy: 89.45% -> 88.16%
+        'alpino'             : alpino.tagged_sents(),  # Accuracy: 88.79% -> 74.51%
         'dependency_treebank': dependency_treebank.tagged_sents(),  # Accuracy: 90.79% -> 89.68%
-        'treebank'           : treebank.tagged_sents(),  # Accuracy: 91.44% -> 90.0%
-        # 'floresta'           : floresta.tagged_sents(),  # Accuracy: 83.63% ->
+        'treebank'           : treebank.tagged_sents(),  # Accuracy: 91.44% -> 90.16%
         'else'               : []  # in case of an unavailable corpus
     }.get(x, 'else')
 
@@ -22,7 +21,7 @@ def select_sents(x):
 def main():
     if len(sys.argv) == 5:
         # sents = select_sents(sys.argv[1])
-        sents = select_sents('brown')
+        sents = select_sents('alpino')
 
         if sents:
             training_sents = sents[:int(

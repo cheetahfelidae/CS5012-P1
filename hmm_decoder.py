@@ -11,6 +11,7 @@ def get_unique_tags(tags):
         if tag not in unique_tags:
             unique_tags.append(tag)
 
+    unique_tags.sort()
     return unique_tags
 
 
@@ -30,23 +31,23 @@ def print_confusion_matrix(unique_ans_tags, out_tags, confusion_file):
 
 
 def print_accuracy(unique_ans_tags, out_tags):
-    percent_count = 0.0
+    print("Accuracy Rate for Each Tag")
+
+    overall_accuracy = 0.0
     for i in unique_ans_tags:
         sum_row = 0
         for j in unique_ans_tags:
             sum_row += out_tags[i][j]
-
-        accuracy = round(out_tags[i][i] * 100.0 / sum_row, 2) if sum_row > 0 else 0
+        accuracy = round(out_tags[i][i] * 100.0 / sum_row, 2)
         print(i + ":  \t" + str(accuracy) + "%")
-        percent_count += accuracy
+        overall_accuracy += accuracy
 
     print("")
-    print("Overall Accuracy Rate: " + str(round(percent_count / len(unique_ans_tags), 2)) + "%")
+    print("Overall Accuracy Rate: " + str(round(overall_accuracy / len(unique_ans_tags), 2)) + "%")
 
 
 def start_viterbi(sents, emiss_table, transit_table, output_file, confusion_file):
-    out_tags = defaultdict(dict)
-    num_tags = defaultdict(dict)
+    confusion_matrix = defaultdict(dict)
 
     trained_tags = transit_table.keys()
 
@@ -166,14 +167,12 @@ def start_viterbi(sents, emiss_table, transit_table, output_file, confusion_file
             post_tag = post_tags[tags_len - 1]
             tagged_line += word + '/' + post_tag + ' '
 
-            num_tags[post_tag] = 1 if post_tag not in num_tags else num_tags[post_tag] + 1
-
-            if post_tag not in out_tags:
-                out_tags[post_tag][ans_tags[i]] = 1
-            elif ans_tags[i] not in out_tags[post_tag]:
-                out_tags[post_tag][ans_tags[i]] = 1
+            if ans_tags[i] not in confusion_matrix:
+                confusion_matrix[ans_tags[i]][post_tag] = 1
+            elif post_tag not in confusion_matrix[ans_tags[i]]:
+                confusion_matrix[ans_tags[i]][post_tag] = 1
             else:
-                out_tags[post_tag][ans_tags[i]] += 1
+                confusion_matrix[ans_tags[i]][post_tag] += 1
 
             tags_len -= 1
         f_out.write(tagged_line.strip() + '\n')
@@ -182,26 +181,27 @@ def start_viterbi(sents, emiss_table, transit_table, output_file, confusion_file
 
     print("(4/4) The output file showing words with their assigned tags is written to " + output_file)
 
+    ''' 
+          ------------------------------------- Confusion Matrix & Accuracy Rate -------------------------------------------
+    '''
+    # get all expected tags (answers) from testing data
     all_ans_tags = list()
     for sent in sents:
         all_ans_tags.extend([t for (_, t) in sent])
-
     unique_ans_tags = get_unique_tags(all_ans_tags)
-    unique_ans_tags.sort()
 
-    # add zero to empty cells of the confusion matrix
+    # fill in empty cells of the confusion matrix with zero
     for i in unique_ans_tags:
         for j in unique_ans_tags:
-            if i not in out_tags:
-                out_tags[i][j] = 0
-            elif j not in out_tags[i]:
-                out_tags[i][j] = 0
+            if i not in confusion_matrix:
+                confusion_matrix[i][j] = 0
+            elif j not in confusion_matrix[i]:
+                confusion_matrix[i][j] = 0
 
-    print_confusion_matrix(unique_ans_tags, out_tags, confusion_file)
+    print_confusion_matrix(unique_ans_tags, confusion_matrix, confusion_file)
 
     print("")
-    print("Accuracy Rate for Each Tag")
-    print_accuracy(unique_ans_tags, out_tags)
+    print_accuracy(unique_ans_tags, confusion_matrix)
 
 
 def hmm_decoder(sents, model_file, output_file, confusion_file):
