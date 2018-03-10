@@ -14,34 +14,39 @@ def get_unique_tags(tags):
     return unique_tags
 
 
-def print_confusion_matrix(unique_ans_tags, unique_out_tags, out_tags):
-    with open("test.csv", "wb") as file:
+def print_confusion_matrix(unique_ans_tags, out_tags, confusion_file):
+    with open(confusion_file, "wb") as file:
         # print all output tags for the first row
         file.write(",")
-        for c in unique_out_tags:
-            file.write(c + ",")
+        for j in unique_ans_tags:
+            file.write(j + ",")
         file.write("\n")
 
-        for r in unique_ans_tags:
-            file.write(r + ",")
-            for c in unique_out_tags:
-                file.write(str(out_tags[r][c]) + ",")
+        for i in unique_ans_tags:
+            file.write(i + ",")
+            for j in unique_ans_tags:
+                file.write(str(out_tags[i][j]) + ",")
             file.write("\n")
 
 
-def print_accuracy_table(out_tags):
-    for tag in out_tags:
-        total = 0
-        for c in out_tags[tag]:
-            total += out_tags[tag][c]
-        print(tag + ":  \t" + str(round(out_tags[tag][tag] * 100.0 / total, 2)) + "%")
+def print_accuracy(unique_ans_tags, out_tags):
+    percent_count = 0.0
+    for i in unique_ans_tags:
+        sum_row = 0
+        for j in unique_ans_tags:
+            sum_row += out_tags[i][j]
+
+        accuracy = round(out_tags[i][i] * 100.0 / sum_row, 2) if sum_row > 0 else 0
+        print(i + ":  \t" + str(accuracy) + "%")
+        percent_count += accuracy
+
+    print("")
+    print("Overall Accuracy Rate: " + str(round(percent_count / len(unique_ans_tags), 2)) + "%")
 
 
-def start_viterbi(sents, emiss_table, transit_table, output_file):
+def start_viterbi(sents, emiss_table, transit_table, output_file, confusion_file):
     out_tags = defaultdict(dict)
     num_tags = defaultdict(dict)
-    correct_count = 0  # the number of the correct guess
-    word_count = 0  # the number of testing words
 
     trained_tags = transit_table.keys()
 
@@ -53,8 +58,6 @@ def start_viterbi(sents, emiss_table, transit_table, output_file):
 
         ans_words = [w for (w, _) in sent]
         ans_tags = [t for (_, t) in sent]
-
-        word_count += len(ans_words)
 
         ''' 
             ------------------------------------------- Initialisation Step ------------------------------------------
@@ -184,27 +187,24 @@ def start_viterbi(sents, emiss_table, transit_table, output_file):
         all_ans_tags.extend([t for (_, t) in sent])
 
     unique_ans_tags = get_unique_tags(all_ans_tags)
-    unique_out_tags = get_unique_tags(out_tags)
+    unique_ans_tags.sort()
 
     # add zero to empty cells of the confusion matrix
-    for r in unique_ans_tags:
-        for c in unique_out_tags:
-            if r not in out_tags:
-                out_tags[r][c] = 0
-            elif c not in out_tags[r]:
-                out_tags[r][c] = 0
+    for i in unique_ans_tags:
+        for j in unique_ans_tags:
+            if i not in out_tags:
+                out_tags[i][j] = 0
+            elif j not in out_tags[i]:
+                out_tags[i][j] = 0
 
-    print_confusion_matrix(unique_ans_tags, unique_out_tags, out_tags)
+    print_confusion_matrix(unique_ans_tags, out_tags, confusion_file)
 
     print("")
     print("Accuracy Rate for Each Tag")
-    print_accuracy_table(out_tags)
-
-    # print("Overall Accuracy Rate: " + str(
-    #         round(correct_count * 100.0 / word_count, 2)) + "%")  # calculate and show the accuracy rate
+    print_accuracy(unique_ans_tags, out_tags)
 
 
-def hmm_decoder(sents, model_file, output_file):
+def hmm_decoder(sents, model_file, output_file, confusion_file):
     print("(3/4) Applying the trained HMM on each testing sentence and assigning a tag to each word")
 
     # Load the HMM model
@@ -213,4 +213,4 @@ def hmm_decoder(sents, model_file, output_file):
         transit_table = model["Transition"]
         emission_table = model["Emission"]
 
-    start_viterbi(sents, emission_table, transit_table, output_file)
+    start_viterbi(sents, emission_table, transit_table, output_file, confusion_file)

@@ -24,5 +24,6 @@ Usage :
 
         - the output path of the generated model
         - the output path of the words with their assigned tags
+        - the output path of the confusion matrix
 
-        e.g. python main.py brown hmm-model.txt hmm_output.txt
+        e.g. python main.py brown hmm-model.txt hmm_output.txt confusion.txt
