@@ -14,13 +14,14 @@ Usage :
     main.py --> there are 3 required commandline arguments as below
         - the desired corpus which is used as training and testing data (95% for training and the remaining for testing)
             there are available seven corpora for this programme
-                1. 'brown'
-                2. 'conll2000'
-                3. 'conll2002'
-                4. 'alpino'
-                5. 'dependency_treebank'
-                6. 'treebank'
-                7. 'floresta'
+                1. 'brown_universal'
+                2. 'brown'
+                3. 'conll2000_universal'
+                4. 'conll2000'
+                5. 'conll2002'
+                6. 'alpino'
+                7. 'dependency_treebank'
+                8. 'treebank'
 
         - the output path of the generated model
         - the output path of the words with their assigned tags

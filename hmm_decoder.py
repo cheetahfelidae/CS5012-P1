@@ -33,17 +33,19 @@ def print_confusion_matrix(unique_ans_tags, out_tags, confusion_file):
 def print_accuracy(unique_ans_tags, out_tags):
     print("Accuracy Rate for Each Tag")
 
-    overall_accuracy = 0.0
+    num_tags = 0
+    num_correct_tags = 0
     for i in unique_ans_tags:
         sum_row = 0
         for j in unique_ans_tags:
             sum_row += out_tags[i][j]
+            num_tags += out_tags[i][j]
         accuracy = round(out_tags[i][i] * 100.0 / sum_row, 2)
+        num_correct_tags += out_tags[i][i]
         print(i + ":  \t" + str(accuracy) + "%")
-        overall_accuracy += accuracy
 
     print("")
-    print("Overall Accuracy Rate: " + str(round(overall_accuracy / len(unique_ans_tags), 2)) + "%")
+    print("Overall Accuracy Rate: " + str(round(num_correct_tags * 100.0 / num_tags, 2)) + "%")
 
 
 def start_viterbi(sents, emiss_table, transit_table, output_file, confusion_file):

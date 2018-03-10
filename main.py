@@ -6,22 +6,21 @@ from hmm_decoder import hmm_decoder
 
 def select_sents(x):
     return {
-        'brown_tag'          : brown.tagged_sents(tagset='universal'),  # Accuracy: 95.12% -> 89.42%
-        'brown'              : brown.tagged_sents(),  # Accuracy: 64.43%
-        'conll2000_tag'      : conll2000.tagged_sents(tagset='universal'),  # Accuracy: 95.63% -> 92.99
-        'conll2000'          : conll2000.tagged_sents(),  # Accuracy: -> 94.00
-        'conll2002'          : conll2002.tagged_sents(),  # Accuracy: 89.45% -> 88.16%
-        'alpino'             : alpino.tagged_sents(),  # Accuracy: 88.79% -> 74.51%
-        'dependency_treebank': dependency_treebank.tagged_sents(),  # Accuracy: 90.79% -> 89.68%
-        'treebank'           : treebank.tagged_sents(),  # Accuracy: 91.44% -> 90.16%
+        'brown_universal'          : brown.tagged_sents(tagset='universal'),  # Accuracy: 95.12%
+        'brown'              : brown.tagged_sents(),  # Accuracy: 93.66%
+        'conll2000_universal'      : conll2000.tagged_sents(tagset='universal'),  # Accuracy: 95.63%
+        'conll2000'          : conll2000.tagged_sents(),  # Accuracy: 94.94%
+        'conll2002'          : conll2002.tagged_sents(),  # Accuracy: 91.53%
+        'alpino'             : alpino.tagged_sents(),  # Accuracy: 88.79%
+        'dependency_treebank': dependency_treebank.tagged_sents(),  # Accuracy: 90.79%
+        'treebank'           : treebank.tagged_sents(),  # Accuracy: 91.44%
         'else'               : []  # in case of an unavailable corpus
     }.get(x, 'else')
 
 
 def main():
     if len(sys.argv) == 5:
-        # sents = select_sents(sys.argv[1])
-        sents = select_sents('alpino')
+        sents = select_sents(sys.argv[1])
 
         if sents:
             training_sents = sents[:int(
