@@ -4,6 +4,8 @@ import json
 from collections import defaultdict
 import sys
 
+import operator
+
 
 def get_unique_tags(tags):
     unique_tags = list()
@@ -15,7 +17,7 @@ def get_unique_tags(tags):
     return unique_tags
 
 
-def print_confusion_matrix(unique_ans_tags, out_tags, confusion_file):
+def file_confusion_matrix(unique_ans_tags, out_tags, confusion_file):
     with open(confusion_file, "wb") as file:
         # print all output tags for the first row
         file.write(",")
@@ -30,9 +32,13 @@ def print_confusion_matrix(unique_ans_tags, out_tags, confusion_file):
             file.write("\n")
 
 
+# outputs the percentage of tags in the test corpus which has been guessed correctly
+# and overall accuracy rate to the terminal
 def print_accuracy(unique_ans_tags, out_tags):
     print("Accuracy Rate for Each Tag")
 
+    stats = {}
+    max(stats.iteritems(), key=operator.itemgetter(1))[0]
     num_tags = 0
     num_correct_tags = 0
     for i in unique_ans_tags:
@@ -42,12 +48,15 @@ def print_accuracy(unique_ans_tags, out_tags):
             num_tags += out_tags[i][j]
         accuracy = round(out_tags[i][i] * 100.0 / sum_row, 2)
         num_correct_tags += out_tags[i][i]
-        print(i + ":  \t" + str(accuracy) + "%")
+        print("%s:\t\t%.2f%%" % (i, accuracy))
 
     print("")
-    print("Overall Accuracy Rate: " + str(round(num_correct_tags * 100.0 / num_tags, 2)) + "%")
+    print("Overall Accuracy Rate: %d correct tags / %d tags = %.2f%%" %
+          (num_correct_tags, num_tags, num_correct_tags * 100.0 / num_tags))
 
 
+# The algorithm applies the trained HMM on each untagged sentence form the testing part of a corpus
+# to determine the sequence of tags with the highest probability
 def start_viterbi(sents, emiss_table, transit_table, output_file, confusion_file):
     confusion_matrix = defaultdict(dict)
 
@@ -192,7 +201,7 @@ def start_viterbi(sents, emiss_table, transit_table, output_file, confusion_file
         all_ans_tags.extend([t for (_, t) in sent])
     unique_ans_tags = get_unique_tags(all_ans_tags)
 
-    # fill in empty cells of the confusion matrix with zero
+    # fill empty cells of the confusion matrix with zero
     for i in unique_ans_tags:
         for j in unique_ans_tags:
             if i not in confusion_matrix:
@@ -200,7 +209,7 @@ def start_viterbi(sents, emiss_table, transit_table, output_file, confusion_file
             elif j not in confusion_matrix[i]:
                 confusion_matrix[i][j] = 0
 
-    print_confusion_matrix(unique_ans_tags, confusion_matrix, confusion_file)
+    file_confusion_matrix(unique_ans_tags, confusion_matrix, confusion_file)
 
     print("")
     print_accuracy(unique_ans_tags, confusion_matrix)

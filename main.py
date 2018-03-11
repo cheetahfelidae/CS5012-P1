@@ -24,9 +24,9 @@ def main():
 
         if sents:
             training_sents = sents[:int(
-                    round(len(sents) * 0.95))]  # only 95% of sentences from the beginning being used as training data
+                    round(len(sents) * 0.95))]  # only 95% sentences used as a training set
             testing_sents = sents[int(
-                    round(len(sents) * 0.95)):]  # only 5% of sentences from the end being used as testing data
+                    round(len(sents) * 0.95)):]  # only 5% sentences used as a testing set
 
             hmm_learner(training_sents, sys.argv[2])
             hmm_decoder(testing_sents, sys.argv[2], sys.argv[3], sys.argv[4])
