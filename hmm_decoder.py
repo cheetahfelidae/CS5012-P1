@@ -37,8 +37,7 @@ def file_confusion_matrix(unique_ans_tags, out_tags, confusion_file):
 def print_accuracy(unique_ans_tags, out_tags):
     print("Accuracy Rate for Each Tag")
 
-    stats = {}
-    max(stats.iteritems(), key=operator.itemgetter(1))[0]
+    accuracies = {}
     num_tags = 0
     num_correct_tags = 0
     for i in unique_ans_tags:
@@ -46,9 +45,15 @@ def print_accuracy(unique_ans_tags, out_tags):
         for j in unique_ans_tags:
             sum_row += out_tags[i][j]
             num_tags += out_tags[i][j]
-        accuracy = round(out_tags[i][i] * 100.0 / sum_row, 2)
+        accuracies[i] = round(out_tags[i][i] * 100.0 / sum_row, 2)
         num_correct_tags += out_tags[i][i]
-        print("%s:\t\t%.2f%%" % (i, accuracy))
+
+    for i in accuracies:
+        print("%s:  \t\t%.2f%%" % (i, accuracies[i]))
+
+    print("")
+    print("Tag with the highest accuracy:\t%s" % (max(accuracies.iteritems(), key=operator.itemgetter(1))[0]))
+    print("Tag with the lowest accuracy:\t%s" % (min(accuracies.iteritems(), key=operator.itemgetter(1))[0]))
 
     print("")
     print("Overall Accuracy Rate: %d correct tags / %d tags = %.2f%%" %
@@ -193,7 +198,7 @@ def start_viterbi(sents, emiss_table, transit_table, output_file, confusion_file
     print("(4/4) The output file showing words with their assigned tags is written to " + output_file)
 
     ''' 
-          ------------------------------------- Confusion Matrix & Accuracy Rate -------------------------------------------
+          ---------------------------------- Confusion Matrix & Accuracy Rate ------------------------------------------
     '''
     # get all expected tags (answers) from testing data
     all_ans_tags = list()

@@ -13,18 +13,19 @@ Source Code : There are 3 python files as follow.
 Usage :
     main.py --> there are 3 required commandline arguments as below
         - the desired corpus which is used as training and testing data (95% for training and the remaining for testing)
-            there are available seven corpora for this programme
-                1. 'brown_universal'
-                2. 'brown'
-                3. 'conll2000_universal'
-                4. 'conll2000'
-                5. 'conll2002'
-                6. 'alpino'
-                7. 'dependency_treebank'
-                8. 'treebank'
+            there are available nine corpora for this programme
+                1. 'brown_universal' - Brown Corpus
+                2. 'brown' - Brown Corpus with the universal tagset
+                3. 'conll2000_universal' - CONLL 2000 Chucking Corpus
+                4. 'conll2000' - CONLL 2000 Chucking Corpus with the universal tagset
+                5. 'conll2002' - CONLL 2002 Named Entity Recognition Corpus
+                6. 'alpino' - Alpino Dutch Treebank
+                7. 'dependency_treebank' - Dependency Parsed Treebank
+                8. 'treebank' - Penn Treebank Sample
+                9. 'indian' - Indian Language POS-tagged Corpus
 
         - the output path of the generated model
         - the output path of the words with their assigned tags
         - the output path of the confusion matrix
 
-        e.g. python main.py brown hmm-model.txt hmm_output.txt confusion.txt
+        e.g. python main.py brown_universal hmm-model.txt hmm_output.txt confusion.txt

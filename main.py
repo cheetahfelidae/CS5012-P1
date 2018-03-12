@@ -1,19 +1,20 @@
 import sys
-from nltk.corpus import brown, conll2000, alpino, dependency_treebank, treebank, conll2002
+from nltk.corpus import brown, conll2000, alpino, dependency_treebank, treebank, conll2002, floresta, indian
 from hmm_learner import hmm_learner
 from hmm_decoder import hmm_decoder
 
 
 def select_sents(x):
     return {
-        'brown_universal'          : brown.tagged_sents(tagset='universal'),  # Accuracy: 95.12%
+        'brown_universal'    : brown.tagged_sents(tagset='universal'),  # Accuracy: 95.12%
         'brown'              : brown.tagged_sents(),  # Accuracy: 93.66%
-        'conll2000_universal'      : conll2000.tagged_sents(tagset='universal'),  # Accuracy: 95.63%
+        'conll2000_universal': conll2000.tagged_sents(tagset='universal'),  # Accuracy: 95.63%
         'conll2000'          : conll2000.tagged_sents(),  # Accuracy: 94.94%
         'conll2002'          : conll2002.tagged_sents(),  # Accuracy: 91.53%
         'alpino'             : alpino.tagged_sents(),  # Accuracy: 88.79%
         'dependency_treebank': dependency_treebank.tagged_sents(),  # Accuracy: 90.79%
         'treebank'           : treebank.tagged_sents(),  # Accuracy: 91.44%
+        'indian'             : indian.tagged_sents(),  # Accuracy: 64.41%
         'else'               : []  # in case of an unavailable corpus
     }.get(x, 'else')
 
