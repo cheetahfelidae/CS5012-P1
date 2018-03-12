@@ -11,8 +11,8 @@ Source Code : There are 3 python files as follow.
 	    - hmm_decode.py --> This is used for decoding untagged corpus and assigning tags to them.
 
 Usage :
-    main.py --> there are 3 required commandline arguments as below
-        - the desired corpus which is used as training and testing data (95% for training and the remaining for testing)
+    main.py --> there are 4 required commandline arguments as below
+        1. the desired corpus which is used as training and testing data (95% for training and the remaining for testing)
             there are available nine corpora for this programme
                 1. 'brown_universal' - Brown Corpus
                 2. 'brown' - Brown Corpus with the universal tagset
@@ -24,8 +24,8 @@ Usage :
                 8. 'treebank' - Penn Treebank Sample
                 9. 'indian' - Indian Language POS-tagged Corpus
 
-        - the output path of the generated model
-        - the output path of the words with their assigned tags
-        - the output path of the confusion matrix
+        2. the output path of the generated model
+        3. the output path of the words with their assigned tags
+        4. the output path of the confusion matrix
 
         e.g. python main.py brown_universal hmm-model.txt hmm_output.txt confusion.txt
