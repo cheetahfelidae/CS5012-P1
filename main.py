@@ -24,10 +24,8 @@ def main():
         sents = select_sents(sys.argv[1])
 
         if sents:
-            training_sents = sents[:int(
-                    round(len(sents) * 0.95))]  # only 95% sentences used as a training set
-            testing_sents = sents[int(
-                    round(len(sents) * 0.95)):]  # only 5% sentences used as a testing set
+            training_sents = sents[:int(round(len(sents) * 0.95))]  # only 95% sentences used as a training set
+            testing_sents = sents[int(round(len(sents) * 0.95)):]  # only 5% sentences used as a testing set
 
             hmm_learner(training_sents, sys.argv[2])
             hmm_decoder(testing_sents, sys.argv[2], sys.argv[3], sys.argv[4])
@@ -35,7 +33,7 @@ def main():
             print("INPUT CORPUS NOT AVAILABLE")
 
     else:
-        print("USAGE:main.py <hmm_model_txt> <hmm_output_txt> <hmm_confusion_csv>")
+        print("USAGE:main.py <corpus> <hmm_model_txt> <hmm_output_txt> <hmm_confusion_csv>")
 
 
 if __name__ == "__main__": main()

@@ -16,8 +16,8 @@ Usage :
             there are available nine corpora for this programme
                 1. 'brown_universal' - Brown Corpus
                 2. 'brown' - Brown Corpus with the universal tagset
-                3. 'conll2000_universal' - CONLL 2000 Chucking Corpus
-                4. 'conll2000' - CONLL 2000 Chucking Corpus with the universal tagset
+                3. 'conll2000_universal' - CONLL 2000 Chucking Corpus with the universal tagset
+                4. 'conll2000' - CONLL 2000 Chucking Corpus
                 5. 'conll2002' - CONLL 2002 Named Entity Recognition Corpus
                 6. 'alpino' - Alpino Dutch Treebank
                 7. 'dependency_treebank' - Dependency Parsed Treebank
