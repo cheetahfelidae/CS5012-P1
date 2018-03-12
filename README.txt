@@ -28,4 +28,4 @@ Usage :
         3. the output path of the words with their assigned tags
         4. the output path of the confusion matrix
 
-        e.g. python main.py brown_universal hmm-model.txt hmm_output.txt confusion.txt
+        e.g. python main.py brown_universal hmm_model.txt hmm_output.txt confusion.csv
