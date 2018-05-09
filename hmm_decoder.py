@@ -73,8 +73,8 @@ def start_viterbi(sents, emiss_table, transit_table, output_file, confusion_file
         viterbi = defaultdict(dict)  # a path probability matrix viterbi
         back_pointer = defaultdict(dict)
 
-        ans_words = [w for (w, _) in sent]
-        ans_tags = [t for (_, t) in sent]
+        test_words = [w for (w, _) in sent]
+        test_tags = [t for (_, t) in sent]
 
         ''' 
             ------------------------------------------- Initialisation Step ------------------------------------------
@@ -84,9 +84,9 @@ def start_viterbi(sents, emiss_table, transit_table, output_file, confusion_file
                 - known words condition
                 - unknown words condition
         '''
-        if ans_words[0] in emiss_table:
-            for s in emiss_table[ans_words[0]]:
-                viterbi[s][0] = transit_table['<S>'][s] * emiss_table[ans_words[0]][s]
+        if test_words[0] in emiss_table:
+            for s in emiss_table[test_words[0]]:
+                viterbi[s][0] = transit_table['<S>'][s] * emiss_table[test_words[0]][s]
                 back_pointer[s][0] = '<S>'
 
         else:
@@ -102,15 +102,15 @@ def start_viterbi(sents, emiss_table, transit_table, output_file, confusion_file
             by taking the maximum over the extensions of all the paths that lead to the current cell 
          '''
         t = 1
-        while t < len(ans_words):
+        while t < len(test_words):
             '''
                 - get the previous-word tags
                     - known words condition
                     - unknown words condition
                         - include <S> but it will be covered in the conditions later
             '''
-            if ans_words[t - 1] in emiss_table:
-                prev_tags = emiss_table[ans_words[t - 1]].keys()
+            if test_words[t - 1] in emiss_table:
+                prev_tags = emiss_table[test_words[t - 1]].keys()
             else:
                 prev_tags = trained_tags
 
@@ -123,13 +123,13 @@ def start_viterbi(sents, emiss_table, transit_table, output_file, confusion_file
                     - known words condition
                     - unknown words condition
             '''
-            if ans_words[t] in emiss_table:
-                for s in emiss_table[ans_words[t]]:
+            if test_words[t] in emiss_table:
+                for s in emiss_table[test_words[t]]:
                     max_val = -sys.maxint - 1
                     cur_back_pointer = ''
                     for k in prev_tags:
                         if k != '<S>':
-                            val = viterbi[k][t - 1] * transit_table[k][s] * emiss_table[ans_words[t]][s]
+                            val = viterbi[k][t - 1] * transit_table[k][s] * emiss_table[test_words[t]][s]
                             if val > max_val:
                                 max_val = val
                                 cur_back_pointer = k
@@ -179,16 +179,16 @@ def start_viterbi(sents, emiss_table, transit_table, output_file, confusion_file
 
         tagged_line = ''
         tags_len = len(post_tags)
-        for i, word in enumerate(ans_words):
+        for i, word in enumerate(test_words):
             post_tag = post_tags[tags_len - 1]
             tagged_line += word + '/' + post_tag + ' '
 
-            if ans_tags[i] not in confusion_matrix:
-                confusion_matrix[ans_tags[i]][post_tag] = 1
-            elif post_tag not in confusion_matrix[ans_tags[i]]:
-                confusion_matrix[ans_tags[i]][post_tag] = 1
+            if test_tags[i] not in confusion_matrix:
+                confusion_matrix[test_tags[i]][post_tag] = 1
+            elif post_tag not in confusion_matrix[test_tags[i]]:
+                confusion_matrix[test_tags[i]][post_tag] = 1
             else:
-                confusion_matrix[ans_tags[i]][post_tag] += 1
+                confusion_matrix[test_tags[i]][post_tag] += 1
 
             tags_len -= 1
         f_out.write(tagged_line.strip() + '\n')
